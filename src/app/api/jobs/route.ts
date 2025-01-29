@@ -64,7 +64,7 @@ export async function GET(request: Request) {
                 OR: [
                   { title: { contains: query, mode: 'insensitive' } },
                   { description: { contains: query, mode: 'insensitive' } },
-                  { companyName: { contains: query, mode: 'insensitive' } },
+                  { company: { contains: query, mode: 'insensitive' } },
                 ],
               }
             : {},
@@ -74,7 +74,7 @@ export async function GET(request: Request) {
         createdAt: 'desc',
       },
       include: {
-        user: {
+        employer: {
           select: {
             name: true,
             email: true,

@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma/client'
 import { JobType } from '@prisma/client'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 
 const jobSchema = z.object({
   title: z.string().min(5),
@@ -44,5 +44,47 @@ export async function POST(request: Request) {
     }
 
     return new NextResponse('Internal Error', { status: 500 })
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const type = searchParams.get('type')
+    const location = searchParams.get('location')
+    const query = searchParams.get('q')
+
+    const jobs = await prisma.job.findMany({
+      where: {
+        AND: [
+          type ? { type: type as JobType } : {},
+          location ? { location: { contains: location, mode: 'insensitive' } } : {},
+          query
+            ? {
+                OR: [
+                  { title: { contains: query, mode: 'insensitive' } },
+                  { description: { contains: query, mode: 'insensitive' } },
+                  { companyName: { contains: query, mode: 'insensitive' } },
+                ],
+              }
+            : {},
+        ],
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
+    })
+
+    return NextResponse.json(jobs)
+  } catch (error) {
+    return new NextResponse('Internal Server Error', { status: 500 })
   }
 } 

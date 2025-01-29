@@ -5,6 +5,24 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/prisma/client'
 import { UserRole } from '@prisma/client'
 
+declare module 'next-auth' {
+  interface User {
+    role: UserRole
+  }
+  interface Session {
+    user: User & {
+      id: string
+    }
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    role: UserRole
+    id: string
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -68,6 +86,7 @@ export const authOptions: NextAuthOptions = {
               googleId: profile?.sub,
             },
           })
+
           user.id = newUser.id
           user.role = newUser.role
         } else {
@@ -77,7 +96,7 @@ export const authOptions: NextAuthOptions = {
       }
       return true
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       if (user) {
         token.role = user.role
         token.id = user.id

@@ -1,7 +1,16 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma/client'
-import JobSchema from '@/components/JobSchema'
+import { UserRole } from '@prisma/client'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { formatDistanceToNow } from 'date-fns'
+import { tr } from 'date-fns/locale'
+import { Building2, MapPin, Clock } from 'lucide-react'
+import ApplyButton from './apply-button'
 
 interface Props {
   params: {
@@ -45,6 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function JobDetailPage({ params }: Props) {
+  const session = await getServerSession(authOptions)
   const job = await prisma.job.findUnique({
     where: { id: params.id },
     include: {
@@ -56,45 +66,57 @@ export default async function JobDetailPage({ params }: Props) {
     notFound()
   }
 
+  const hasApplied = session?.user
+    ? await prisma.jobApplication.findFirst({
+        where: {
+          jobId: job.id,
+          userId: session.user.id,
+        },
+      })
+    : null
+
   return (
-    <>
-      <JobSchema job={job} />
-      <article className="max-w-2xl mx-auto">
-        <div className="md:flex md:items-center md:justify-between md:space-x-4 xl:border-b xl:pb-6">
+    <div className="container mx-auto py-8">
+      <Card className="p-6">
+        <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{job.title}</h1>
-            <p className="mt-2 text-sm text-gray-700">
-              {job.company} • {job.location}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-8 space-y-6">
-          <div className="prose max-w-none">
-            <h2 className="text-lg font-semibold">İş Tanımı</h2>
-            <div dangerouslySetInnerHTML={{ __html: job.description }} />
-          </div>
-
-          <div>
-            <h2 className="text-lg font-semibold">Gereksinimler</h2>
-            <ul className="mt-4 space-y-2">
-              {job.requirements.map((requirement, index) => (
-                <li key={index} className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>{requirement}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {job.salary && (
-            <div>
-              <h2 className="text-lg font-semibold">Maaş Aralığı</h2>
-              <p className="mt-2">{job.salary}</p>
+            <h1 className="text-2xl font-bold">{job.title}</h1>
+            <div className="mt-2 space-y-2">
+              <div className="flex items-center text-gray-600">
+                <Building2 className="w-4 h-4 mr-2" />
+                <span>{job.company}</span>
+              </div>
+              <div className="flex items-center text-gray-600">
+                <MapPin className="w-4 h-4 mr-2" />
+                <span>{job.location}</span>
+              </div>
+              <div className="flex items-center text-gray-600">
+                <Clock className="w-4 h-4 mr-2" />
+                <span>
+                  {formatDistanceToNow(job.createdAt, {
+                    addSuffix: true,
+                    locale: tr,
+                  })}
+                </span>
+              </div>
             </div>
+            <div className="mt-4">
+              <Badge variant="secondary">{job.type}</Badge>
+            </div>
+          </div>
+          {session?.user?.role === UserRole.CANDIDATE && (
+            <ApplyButton jobId={job.id} hasApplied={!!hasApplied} />
           )}
         </div>
-      </article>
-    </>
+
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold">İş Tanımı</h2>
+          <div
+            className="mt-4 prose max-w-none"
+            dangerouslySetInnerHTML={{ __html: job.description }}
+          />
+        </div>
+      </Card>
+    </div>
   )
 } 

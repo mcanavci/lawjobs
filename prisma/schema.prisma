@@ -14,52 +14,67 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
+  id            String          @id @default(cuid())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  email         String          @unique
   name          String?
   password      String?
-  googleId      String?   @unique
-  role          UserRole  @default(CANDIDATE)
+  googleId      String?         @unique
+  role          UserRole        @default(CANDIDATE)
+  accounts      Account[]
   applications  JobApplication[]
-  postedJobs    Job[]     @relation("EmployerJobs")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  postedJobs    Job[]          @relation("EmployerJobs")
 }
 
 model Job {
-  id            String    @id @default(cuid())
+  id            String          @id @default(cuid())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
   title         String
+  description   String
   company       String
   location      String
-  description   String    @db.Text
-  requirements  String[]
-  salary        String?
   type          JobType
+  employer      User            @relation("EmployerJobs", fields: [employerId], references: [id])
   employerId    String
-  employer      User      @relation("EmployerJobs", fields: [employerId], references: [id])
   applications  JobApplication[]
-  isActive      Boolean   @default(true)
-  source        JobSource @default(DIRECT)
-  sourceUrl     String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
 }
 
 model JobApplication {
   id        String   @id @default(cuid())
-  jobId     String
-  userId    String
-  job       Job      @relation(fields: [jobId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
-  status    ApplicationStatus @default(PENDING)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  status    Status   @default(PENDING)
+  job       Job      @relation(fields: [jobId], references: [id])
+  jobId     String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
 }
 
 enum UserRole {
-  ADMIN
-  EMPLOYER
   CANDIDATE
+  EMPLOYER
+  ADMIN
 }
 
 enum JobType {
@@ -69,15 +84,8 @@ enum JobType {
   INTERNSHIP
 }
 
-enum JobSource {
-  DIRECT
-  LINKEDIN
-  SCRAPED
-}
-
-enum ApplicationStatus {
+enum Status {
   PENDING
-  REVIEWED
   ACCEPTED
   REJECTED
 }

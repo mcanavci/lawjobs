@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String?
+  googleId      String?   @unique
+  role          UserRole  @default(CANDIDATE)
+  applications  JobApplication[]
+  postedJobs    Job[]     @relation("EmployerJobs")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Job {
+  id            String    @id @default(cuid())
+  title         String
+  company       String
+  location      String
+  description   String    @db.Text
+  requirements  String[]
+  salary        String?
+  type          JobType
+  employerId    String
+  employer      User      @relation("EmployerJobs", fields: [employerId], references: [id])
+  applications  JobApplication[]
+  isActive      Boolean   @default(true)
+  source        JobSource @default(DIRECT)
+  sourceUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model JobApplication {
+  id        String   @id @default(cuid())
+  jobId     String
+  userId    String
+  job       Job      @relation(fields: [jobId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  status    ApplicationStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum UserRole {
+  ADMIN
+  EMPLOYER
+  CANDIDATE
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+}
+
+enum JobSource {
+  DIRECT
+  LINKEDIN
+  SCRAPED
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWED
+  ACCEPTED
+  REJECTED
+}

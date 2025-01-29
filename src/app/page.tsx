@@ -1,8 +1,22 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export default function HomePage() {
+  const router = useRouter()
+
+  const handleViewJobs = () => {
+    // First attempt smooth scroll if on the jobs page
+    const jobsSection = document.getElementById('jobs-section')
+    if (jobsSection) {
+      jobsSection.scrollIntoView({ behavior: 'smooth' })
+    } else {
+      // If not on jobs page, navigate to it
+      router.push('/jobs')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -32,12 +46,12 @@ export default function HomePage() {
           </div>
 
           <div className="mt-10 flex justify-center gap-x-6">
-            <Link
-              href="/jobs"
+            <button
+              onClick={handleViewJobs}
               className="rounded-md bg-navy-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-navy-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-600"
             >
               İş İlanlarını Görüntüle
-            </Link>
+            </button>
             <Link
               href="/jobs/post"
               className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-navy-600 shadow-sm ring-1 ring-inset ring-navy-200 hover:bg-gray-50"

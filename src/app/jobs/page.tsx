@@ -131,7 +131,7 @@ export default function JobsPage() {
       </div>
 
       {/* Content Section */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
+      <div id="jobs-section" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
         {/* Mobile Filter Button */}
         <div className="lg:hidden mb-4">
           <button

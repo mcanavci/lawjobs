@@ -59,16 +59,16 @@ export default function RootLayout({
                   Şirketler
                 </Link>
               </div>
-              <div className="hidden lg:flex lg:items-center lg:justify-center lg:gap-x-4">
+              <div className="hidden lg:flex lg:items-center lg:gap-x-4">
                 <Link
                   href="/auth/login"
-                  className="inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-semibold text-gray-900 hover:text-navy-600"
+                  className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:text-navy-600"
                 >
                   Giriş Yap
                 </Link>
                 <Link
                   href="/jobs/post"
-                  className="inline-flex h-9 items-center justify-center rounded-md bg-navy-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-navy-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-600"
+                  className="rounded-md bg-navy-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-navy-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-600"
                 >
                   İlan Ver
                 </Link>

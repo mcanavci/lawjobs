@@ -2,9 +2,9 @@ import { PrismaClient } from '@prisma/client'
 
 type PrismaClientType = PrismaClient
 
-export type Job = Awaited<ReturnType<PrismaClientType['job']['findUnique']>>
-export type User = Awaited<ReturnType<PrismaClientType['user']['findUnique']>>
-export type JobApplication = Awaited<ReturnType<PrismaClientType['jobApplication']['findUnique']>>
+export type Job = NonNullable<Awaited<ReturnType<PrismaClientType['job']['findUnique']>>>
+export type User = NonNullable<Awaited<ReturnType<PrismaClientType['user']['findUnique']>>>
+export type JobApplication = NonNullable<Awaited<ReturnType<PrismaClientType['jobApplication']['findUnique']>>>
 
 export enum JobType {
   FULL_TIME = 'FULL_TIME',

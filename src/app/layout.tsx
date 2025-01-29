@@ -4,6 +4,7 @@ import "./globals.css";
 import Link from "next/link";
 import { Providers } from './providers'
 import Analytics from '@/components/Analytics'
+import { Toaster } from '@/components/ui/toaster'
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -68,6 +69,7 @@ export default function RootLayout({
           </main>
         </Providers>
         <Analytics />
+        <Toaster />
       </body>
     </html>
   );

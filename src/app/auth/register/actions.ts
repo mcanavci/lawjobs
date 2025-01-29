@@ -1,17 +1,21 @@
 'use server'
 
 import { hash } from 'bcrypt'
+import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma/client'
+import { UserRole } from '@prisma/client'
 
-const registerSchema = z.object({
-  name: z.string().min(2, 'İsim en az 2 karakter olmalıdır'),
-  email: z.string().email('Geçerli bir email adresi giriniz'),
-  password: z.string().min(6, 'Şifre en az 6 karakter olmalıdır'),
-  role: z.enum(['EMPLOYER', 'CANDIDATE']),
+export const registerSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  role: z.nativeEnum(UserRole),
 })
 
-export async function register(data: z.infer<typeof registerSchema>) {
+export type RegisterInput = z.infer<typeof registerSchema>
+
+export async function register(data: RegisterInput) {
   const { name, email, password, role } = registerSchema.parse(data)
 
   const existingUser = await prisma.user.findUnique({
@@ -19,7 +23,7 @@ export async function register(data: z.infer<typeof registerSchema>) {
   })
 
   if (existingUser) {
-    throw new Error('Bu email adresi zaten kullanılıyor')
+    throw new Error('This email is already in use')
   }
 
   const hashedPassword = await hash(password, 10)
@@ -33,5 +37,5 @@ export async function register(data: z.infer<typeof registerSchema>) {
     },
   })
 
-  return user
+  redirect('/auth/login?registered=true')
 } 

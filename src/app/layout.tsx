@@ -1,25 +1,15 @@
 'use client'
 
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import Link from "next/link";
+import { Inter } from "next/font/google"
+import "./globals.css"
+import Link from "next/link"
 import { useState } from 'react'
 import { Providers } from './providers'
 import Analytics from '@/components/Analytics'
 import { Toaster } from '@/components/ui/toaster'
 import { Search, Menu, X } from 'lucide-react'
 
-const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: {
-    default: 'Avukat İş İlanları',
-    template: '%s | Avukat İş İlanları',
-  },
-  description: "Türkiye'nin en güncel avukat iş ilanları platformu. Stajyer avukat, kıdemli avukat ve hukuk müşaviri pozisyonları.",
-  keywords: 'avukat iş ilanları, stajyer avukat iş ilanları, kıdemli avukat iş ilanları, hukuk müşaviri iş ilanları',
-};
+const inter = Inter({ subsets: ["latin"] })
 
 export default function RootLayout({
   children,

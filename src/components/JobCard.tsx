@@ -1,6 +1,6 @@
+'use client'
+
 import Link from 'next/link'
-import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { formatDistanceToNow } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { Building2, MapPin, Clock } from 'lucide-react'
@@ -12,36 +12,51 @@ interface JobCardProps {
   }
 }
 
+const jobTypeLabels: Record<string, string> = {
+  FULL_TIME: 'Tam Zamanlı',
+  PART_TIME: 'Yarı Zamanlı',
+  INTERNSHIP: 'Stajyer',
+  CONTRACT: 'Sözleşmeli',
+}
+
 export default function JobCard({ job }: JobCardProps) {
   return (
-    <Link href={`/jobs/${job.id}`}>
-      <Card className="p-6 hover:border-gray-400 transition-colors">
-        <div>
-          <h2 className="text-xl font-semibold">{job.title}</h2>
-          <div className="mt-2 space-y-2">
-            <div className="flex items-center text-gray-600">
-              <Building2 className="w-4 h-4 mr-2" />
-              <span>{job.company}</span>
-            </div>
-            <div className="flex items-center text-gray-600">
-              <MapPin className="w-4 h-4 mr-2" />
-              <span>{job.location}</span>
-            </div>
-            <div className="flex items-center text-gray-600">
-              <Clock className="w-4 h-4 mr-2" />
-              <span>
-                {formatDistanceToNow(job.createdAt, {
-                  addSuffix: true,
-                  locale: tr,
-                })}
+    <Link href={`/jobs/${job.id}`} className="block">
+      <div className="group relative overflow-hidden rounded-lg bg-white p-6 shadow-sm transition duration-200 hover:shadow-md">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-navy-50">
+            <Building2 className="h-6 w-6 text-navy-600" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between">
+              <h2 className="truncate text-lg font-semibold text-gray-900 group-hover:text-navy-600">
+                {job.title}
+              </h2>
+              <span className="inline-flex items-center rounded-full bg-navy-50 px-2.5 py-0.5 text-xs font-medium text-navy-700">
+                {jobTypeLabels[job.type] || job.type}
               </span>
             </div>
-          </div>
-          <div className="mt-4">
-            <Badge variant="secondary">{job.type}</Badge>
+            <p className="mt-1 text-sm font-medium text-gray-900">
+              {job.employer.name}
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-500">
+              <div className="flex items-center">
+                <MapPin className="mr-1.5 h-4 w-4 flex-shrink-0 text-gray-400" />
+                <span>{job.location}</span>
+              </div>
+              <div className="flex items-center">
+                <Clock className="mr-1.5 h-4 w-4 flex-shrink-0 text-gray-400" />
+                <span>
+                  {formatDistanceToNow(job.createdAt, {
+                    addSuffix: true,
+                    locale: tr,
+                  })}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
-      </Card>
+      </div>
     </Link>
   )
 } 

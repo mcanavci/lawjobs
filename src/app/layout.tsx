@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Providers } from './providers'
 import Analytics from '@/components/Analytics'
 import { Toaster } from '@/components/ui/toaster'
+import { Search, Menu } from 'lucide-react'
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,48 +24,59 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="tr" className="h-full">
-      <body className={`${inter.className} h-full`}>
+    <html lang="tr" suppressHydrationWarning>
+      <body className={`${inter.className} min-h-screen bg-white`}>
         <Providers>
-          <nav className="bg-white border-b border-gray-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between h-16">
-                <div className="flex">
-                  <div className="flex-shrink-0 flex items-center">
-                    <Link href="/" className="text-2xl font-bold text-navy-600">
-                      Avukat İş İlanları
-                    </Link>
-                  </div>
-                  <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                    <Link href="/jobs" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
-                      İş İlanları
-                    </Link>
-                  </div>
-                </div>
-                <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
-                  <Link
-                    href="/auth/login"
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-navy-600 hover:text-navy-700"
-                  >
-                    Giriş Yap
-                  </Link>
-                  <Link
-                    href="/auth/register"
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-navy-600 hover:text-navy-700"
-                  >
-                    Kayıt Ol
-                  </Link>
-                  <Link
-                    href="/jobs/post"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-navy-600 hover:bg-navy-700"
-                  >
-                    İlan Ver
-                  </Link>
-                </div>
+          <header className="fixed inset-x-0 top-0 z-50 border-b border-gray-200 bg-white">
+            <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
+              <div className="flex lg:flex-1">
+                <Link href="/" className="-m-1.5 p-1.5">
+                  <span className="text-2xl font-bold text-navy-600">
+                    Avukat İş İlanları
+                  </span>
+                </Link>
               </div>
-            </div>
-          </nav>
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              <div className="flex lg:hidden">
+                <button
+                  type="button"
+                  className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
+                >
+                  <span className="sr-only">Open main menu</span>
+                  <Menu className="h-6 w-6" aria-hidden="true" />
+                </button>
+              </div>
+              <div className="hidden lg:flex lg:gap-x-12">
+                <Link
+                  href="/jobs"
+                  className="text-sm font-semibold leading-6 text-gray-900 hover:text-navy-600"
+                >
+                  İş İlanları
+                </Link>
+                <Link
+                  href="/companies"
+                  className="text-sm font-semibold leading-6 text-gray-900 hover:text-navy-600"
+                >
+                  Şirketler
+                </Link>
+              </div>
+              <div className="hidden lg:flex lg:items-center lg:justify-center lg:gap-x-4">
+                <Link
+                  href="/auth/login"
+                  className="inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-semibold text-gray-900 hover:text-navy-600"
+                >
+                  Giriş Yap
+                </Link>
+                <Link
+                  href="/jobs/post"
+                  className="inline-flex h-9 items-center justify-center rounded-md bg-navy-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-navy-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-600"
+                >
+                  İlan Ver
+                </Link>
+              </div>
+            </nav>
+          </header>
+
+          <main className="flex min-h-screen flex-col pt-16">
             {children}
           </main>
         </Providers>

@@ -84,10 +84,12 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-24">
           <div className="mx-auto max-w-2xl text-center">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900">
-              <span className="text-navy-600">
+              <span className="text-navy-600 block">
                 Avukat İş İlanları
-              </span>{' '}
-              Tek Bir Yerde
+              </span>
+              <span className="mt-2 block">
+                Tek Bir Yerde
+              </span>
             </h1>
             <p className="mt-4 sm:mt-6 text-base sm:text-lg leading-8 text-gray-600 px-4">
               Türkiye'nin önde gelen hukuk bürolarında ve şirketlerindeki fırsatlar sizi bekliyor.

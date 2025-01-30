@@ -131,10 +131,7 @@ export default function AdminJobsPage() {
 
         <TabsContent value="single">
           <Card className="p-6">
-            <form onSubmit={handleSubmit((data) => {
-              console.log('Form submitted with data:', data)
-              return onSubmit(data)
-            })} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium mb-2">Job Title</label>
                 <input
@@ -227,7 +224,11 @@ export default function AdminJobsPage() {
                 </ul>
               </div>
 
-              <Button type="submit" disabled={isSubmitting} className="w-full">
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="w-full"
+              >
                 {isSubmitting ? 'Creating...' : 'Create Job Listing'}
               </Button>
             </form>

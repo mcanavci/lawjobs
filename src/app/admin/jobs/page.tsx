@@ -35,6 +35,7 @@ export default function AdminJobsPage() {
     handleSubmit,
     reset,
     setValue,
+    trigger,
     formState: { errors, isSubmitting },
   } = useForm<JobFormData>({
     resolver: zodResolver(jobSchema),
@@ -44,10 +45,11 @@ export default function AdminJobsPage() {
     },
   })
 
-  // Register description field with form validation
-  useEffect(() => {
-    setValue('description', description)
-  }, [description, setValue])
+  const handleDescriptionChange = (content: string) => {
+    setDescription(content)
+    setValue('description', content)
+    trigger('description') // This will trigger validation immediately
+  }
 
   const onSubmit = async (data: JobFormData) => {
     try {
@@ -166,7 +168,7 @@ export default function AdminJobsPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-2">Description</label>
-                <Tiptap content={description} onChange={setDescription} />
+                <Tiptap content={description} onChange={handleDescriptionChange} />
                 {errors.description && (
                   <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
                 )}

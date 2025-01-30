@@ -1,12 +1,13 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { prisma } from '@/lib/prisma/client'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatDistanceToNow } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { Building2, MapPin, Clock } from 'lucide-react'
 import ApplyButton from './apply-button'
+import * as fs from 'fs'
+import * as path from 'path'
 
 interface Props {
   params: {
@@ -14,13 +15,14 @@ interface Props {
   }
 }
 
+async function getJob(id: string) {
+  const jobsPath = path.join(process.cwd(), 'src/data/jobs.json')
+  const jobsData = JSON.parse(fs.readFileSync(jobsPath, 'utf8'))
+  return jobsData.jobs.find((job: any) => job.id === id)
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const job = await prisma.job.findUnique({
-    where: { id: params.id },
-    include: {
-      employer: true,
-    },
-  })
+  const job = await getJob(params.id)
 
   if (!job) {
     return {
@@ -44,18 +46,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       job.type.toLowerCase(),
     ].join(', '),
     alternates: {
-      canonical: `https://yourdomain.com/jobs/${job.id}`,
+      canonical: `https://lawjobs.vercel.app/jobs/${job.id}`,
     },
   }
 }
 
 export default async function JobDetailPage({ params }: Props) {
-  const job = await prisma.job.findUnique({
-    where: { id: params.id },
-    include: {
-      employer: true,
-    },
-  })
+  const job = await getJob(params.id)
 
   if (!job) {
     notFound()
@@ -79,7 +76,7 @@ export default async function JobDetailPage({ params }: Props) {
               <div className="flex items-center text-gray-600">
                 <Clock className="w-4 h-4 mr-2" />
                 <span>
-                  {formatDistanceToNow(job.createdAt, {
+                  {formatDistanceToNow(new Date(job.createdAt), {
                     addSuffix: true,
                     locale: tr,
                   })}
@@ -100,6 +97,17 @@ export default async function JobDetailPage({ params }: Props) {
             dangerouslySetInnerHTML={{ __html: job.description }}
           />
         </div>
+
+        {job.requirements.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold">Gereksinimler</h2>
+            <ul className="mt-4 list-disc list-inside space-y-2">
+              {job.requirements.map((req: string, index: number) => (
+                <li key={index}>{req}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </Card>
     </div>
   )

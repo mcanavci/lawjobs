@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { JobType } from '@prisma/client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -34,13 +34,20 @@ export default function AdminJobsPage() {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<JobFormData>({
     resolver: zodResolver(jobSchema),
     defaultValues: {
       type: JobType.FULL_TIME,
+      description: '',
     },
   })
+
+  // Register description field with form validation
+  useEffect(() => {
+    setValue('description', description)
+  }, [description, setValue])
 
   const onSubmit = async (data: JobFormData) => {
     try {

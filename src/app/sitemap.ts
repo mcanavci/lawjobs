@@ -1,39 +1,31 @@
 import { MetadataRoute } from 'next'
-import { prisma } from '@/lib/prisma/client'
+import * as fs from 'fs'
+import * as path from 'path'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://yourdomain.com'
-
-  // Get all jobs
-  const jobs = await prisma.job.findMany({
-    select: {
-      id: true,
-      updatedAt: true,
-    },
-  })
-
-  const jobUrls = jobs.map((job) => ({
-    url: `${baseUrl}/jobs/${job.id}`,
-    lastModified: job.updatedAt,
-  }))
+  // Read jobs from JSON file
+  const jobsPath = path.join(process.cwd(), 'src/data/jobs.json')
+  const jobsData = JSON.parse(fs.readFileSync(jobsPath, 'utf8'))
+  const jobs = jobsData.jobs
 
   return [
     {
-      url: baseUrl,
+      url: 'https://lawjobs.vercel.app',
       lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 1,
     },
     {
-      url: `${baseUrl}/jobs`,
+      url: 'https://lawjobs.vercel.app/jobs',
       lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.8,
     },
-    {
-      url: `${baseUrl}/auth/login`,
-      lastModified: new Date(),
-    },
-    {
-      url: `${baseUrl}/auth/register`,
-      lastModified: new Date(),
-    },
-    ...jobUrls,
+    ...jobs.map((job: any) => ({
+      url: `https://lawjobs.vercel.app/jobs/${job.id}`,
+      lastModified: new Date(job.createdAt),
+      changeFrequency: 'weekly' as const,
+      priority: 0.5,
+    })),
   ]
 } 

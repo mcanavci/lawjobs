@@ -5,8 +5,8 @@ import { prisma } from '@/lib/prisma/client'
 import { JobType } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
 import nodemailer from 'nodemailer'
-import fs from 'fs'
-import path from 'path'
+import * as fs from 'fs'
+import * as path from 'path'
 
 // Create reusable transporter object using SMTP transport
 const transporter = nodemailer.createTransport({
@@ -23,8 +23,8 @@ const jobSchema = z.object({
   location: z.string().min(2),
   description: z.string().min(50),
   requirements: z.array(z.string()),
-  salary: z.string().optional(),
   type: z.nativeEnum(JobType),
+  salary: z.string().optional(),
 })
 
 interface Job {
@@ -44,34 +44,32 @@ export async function POST(request: Request) {
     const json = await request.json()
     const body = jobSchema.parse(json)
 
-    // Send email with job posting details
-    await transporter.sendMail({
-      from: process.env.GMAIL_USER,
-      to: process.env.ADMIN_EMAIL,
-      subject: `Yeni İş İlanı: ${body.title} - ${body.company}`,
-      html: `
-        <h2>Yeni İş İlanı Başvurusu</h2>
-        <p><strong>Pozisyon:</strong> ${body.title}</p>
-        <p><strong>Şirket:</strong> ${body.company}</p>
-        <p><strong>Lokasyon:</strong> ${body.location}</p>
-        <p><strong>Tip:</strong> ${body.type}</p>
-        ${body.salary ? `<p><strong>Maaş:</strong> ${body.salary}</p>` : ''}
-        <h3>İş Tanımı:</h3>
-        <div>${body.description}</div>
-        <h3>Gereksinimler:</h3>
-        <ul>
-          ${body.requirements.map(req => `<li>${req}</li>`).join('')}
-        </ul>
-      `,
-    })
+    // Read existing jobs
+    const jobsPath = path.join(process.cwd(), 'src/data/jobs.json')
+    const jobsData = JSON.parse(fs.readFileSync(jobsPath, 'utf8'))
 
-    return NextResponse.json({ success: true })
+    // Create new job
+    const newJob = {
+      ...body,
+      id: `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: new Date().toISOString(),
+      source: 'Manual Entry',
+      sourceUrl: '',
+    }
+
+    // Add to beginning of jobs array
+    jobsData.jobs.unshift(newJob)
+
+    // Save back to file
+    fs.writeFileSync(jobsPath, JSON.stringify(jobsData, null, 2))
+
+    return NextResponse.json(newJob)
   } catch (error) {
     if (error instanceof z.ZodError) {
       return new NextResponse(JSON.stringify(error.errors), { status: 422 })
     }
 
-    console.error('Error sending email:', error)
+    console.error('Error creating job:', error)
     return new NextResponse('Internal Error', { status: 500 })
   }
 }
@@ -81,30 +79,38 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type')
     const location = searchParams.get('location')
-    const query = searchParams.get('q')?.toLowerCase()
+    const q = searchParams.get('q')?.toLowerCase()
 
     // Read jobs from JSON file
-    const jobsData = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'src/data/jobs.json'), 'utf8'))
-    let jobs = jobsData.jobs as Job[]
+    const jobsPath = path.join(process.cwd(), 'src/data/jobs.json')
+    const jobsData = JSON.parse(fs.readFileSync(jobsPath, 'utf8'))
+    let jobs = jobsData.jobs
 
     // Apply filters
     if (type) {
-      jobs = jobs.filter(job => job.type === type)
+      jobs = jobs.filter((job: any) => job.type === type)
     }
     if (location) {
-      jobs = jobs.filter(job => job.location.toLowerCase().includes(location.toLowerCase()))
-    }
-    if (query) {
-      jobs = jobs.filter(job => 
-        job.title.toLowerCase().includes(query) ||
-        job.description.toLowerCase().includes(query) ||
-        job.company.toLowerCase().includes(query)
+      jobs = jobs.filter((job: any) => 
+        job.location.toLowerCase().includes(location.toLowerCase())
       )
     }
+    if (q) {
+      jobs = jobs.filter((job: any) => 
+        job.title.toLowerCase().includes(q) ||
+        job.description.toLowerCase().includes(q) ||
+        job.company.toLowerCase().includes(q)
+      )
+    }
+
+    // Sort by creation date (newest first)
+    jobs.sort((a: any, b: any) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
 
     return NextResponse.json(jobs)
   } catch (error) {
     console.error('Error reading jobs:', error)
-    return new NextResponse('Internal Server Error', { status: 500 })
+    return new NextResponse('Internal Error', { status: 500 })
   }
 } 

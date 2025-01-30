@@ -53,6 +53,8 @@ export default function AdminJobsPage() {
 
   const onSubmit = async (data: JobFormData) => {
     try {
+      console.log('Form data:', { ...data, description, requirements })
+      
       const response = await fetch('/api/jobs', {
         method: 'POST',
         headers: {
@@ -65,8 +67,11 @@ export default function AdminJobsPage() {
         }),
       })
 
+      const result = await response.json()
+
       if (!response.ok) {
-        throw new Error('Failed to create job listing')
+        console.error('Server error:', result)
+        throw new Error(result.message || 'Failed to create job listing')
       }
 
       toast({
@@ -80,9 +85,10 @@ export default function AdminJobsPage() {
       setRequirements([])
       setNewRequirement('')
     } catch (error) {
+      console.error('Error creating job:', error)
       toast({
         title: 'Error',
-        description: 'Failed to create job listing. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to create job listing. Please try again.',
         variant: 'destructive',
       })
     }

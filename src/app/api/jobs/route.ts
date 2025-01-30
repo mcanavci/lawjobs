@@ -39,14 +39,35 @@ interface Job {
   createdAt: string
 }
 
+interface JobData {
+  jobs: Job[]
+}
+
 export async function POST(request: Request) {
   try {
     const json = await request.json()
     const body = jobSchema.parse(json)
 
-    // Read existing jobs
+    // Ensure data directory exists
+    const dataDir = path.join(process.cwd(), 'src/data')
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true })
+    }
+
+    // Read existing jobs or create new file
     const jobsPath = path.join(process.cwd(), 'src/data/jobs.json')
-    const jobsData = JSON.parse(fs.readFileSync(jobsPath, 'utf8'))
+    let jobsData: JobData = { jobs: [] }
+    
+    if (fs.existsSync(jobsPath)) {
+      const fileContent = fs.readFileSync(jobsPath, 'utf8')
+      try {
+        jobsData = JSON.parse(fileContent) as JobData
+      } catch (e) {
+        console.error('Error parsing jobs.json:', e)
+        // If file is corrupted, start fresh
+        jobsData = { jobs: [] }
+      }
+    }
 
     // Create new job
     const newJob = {
@@ -70,7 +91,10 @@ export async function POST(request: Request) {
     }
 
     console.error('Error creating job:', error)
-    return new NextResponse('Internal Error', { status: 500 })
+    return new NextResponse(
+      JSON.stringify({ message: error instanceof Error ? error.message : 'Internal Error' }), 
+      { status: 500 }
+    )
   }
 }
 
@@ -83,8 +107,12 @@ export async function GET(request: Request) {
 
     // Read jobs from JSON file
     const jobsPath = path.join(process.cwd(), 'src/data/jobs.json')
-    const jobsData = JSON.parse(fs.readFileSync(jobsPath, 'utf8'))
-    let jobs = jobsData.jobs
+    let jobs = []
+    
+    if (fs.existsSync(jobsPath)) {
+      const jobsData = JSON.parse(fs.readFileSync(jobsPath, 'utf8'))
+      jobs = jobsData.jobs
+    }
 
     // Apply filters
     if (type) {
@@ -111,6 +139,9 @@ export async function GET(request: Request) {
     return NextResponse.json(jobs)
   } catch (error) {
     console.error('Error reading jobs:', error)
-    return new NextResponse('Internal Error', { status: 500 })
+    return new NextResponse(
+      JSON.stringify({ message: error instanceof Error ? error.message : 'Internal Error' }), 
+      { status: 500 }
+    )
   }
 } 

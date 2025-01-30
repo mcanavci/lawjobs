@@ -42,17 +42,25 @@ export default function AdminJobsPage() {
     defaultValues: {
       type: JobType.FULL_TIME,
       description: '',
+      requirements: [],
     },
   })
+
+  // Register description and requirements with form
+  useEffect(() => {
+    setValue('description', description)
+    setValue('requirements', requirements)
+  }, [description, requirements, setValue])
 
   const handleDescriptionChange = (content: string) => {
     setDescription(content)
     setValue('description', content)
-    trigger('description') // This will trigger validation immediately
+    trigger('description')
   }
 
   const onSubmit = async (data: JobFormData) => {
     try {
+      console.log('Starting form submission...')
       console.log('Form data:', { ...data, description, requirements })
       
       const response = await fetch('/api/jobs', {
@@ -67,7 +75,9 @@ export default function AdminJobsPage() {
         }),
       })
 
+      console.log('Response status:', response.status)
       const result = await response.json()
+      console.log('Response data:', result)
 
       if (!response.ok) {
         console.error('Server error:', result)
@@ -96,13 +106,17 @@ export default function AdminJobsPage() {
 
   const addRequirement = () => {
     if (newRequirement.trim()) {
-      setRequirements([...requirements, newRequirement.trim()])
+      const updatedRequirements = [...requirements, newRequirement.trim()]
+      setRequirements(updatedRequirements)
+      setValue('requirements', updatedRequirements)
       setNewRequirement('')
     }
   }
 
   const removeRequirement = (index: number) => {
-    setRequirements(requirements.filter((_, i) => i !== index))
+    const updatedRequirements = requirements.filter((_, i) => i !== index)
+    setRequirements(updatedRequirements)
+    setValue('requirements', updatedRequirements)
   }
 
   return (
@@ -117,7 +131,10 @@ export default function AdminJobsPage() {
 
         <TabsContent value="single">
           <Card className="p-6">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit((data) => {
+              console.log('Form submitted with data:', data)
+              return onSubmit(data)
+            })} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium mb-2">Job Title</label>
                 <input

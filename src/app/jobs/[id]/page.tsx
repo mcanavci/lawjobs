@@ -1,10 +1,6 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma/client'
-import { UserRole } from '@prisma/client'
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatDistanceToNow } from 'date-fns'
@@ -54,7 +50,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function JobDetailPage({ params }: Props) {
-  const session = await getServerSession(authOptions)
   const job = await prisma.job.findUnique({
     where: { id: params.id },
     include: {
@@ -65,15 +60,6 @@ export default async function JobDetailPage({ params }: Props) {
   if (!job) {
     notFound()
   }
-
-  const hasApplied = session?.user
-    ? await prisma.jobApplication.findFirst({
-        where: {
-          jobId: job.id,
-          userId: session.user.id,
-        },
-      })
-    : null
 
   return (
     <div className="container mx-auto py-8">
@@ -104,9 +90,7 @@ export default async function JobDetailPage({ params }: Props) {
               <Badge variant="secondary">{job.type}</Badge>
             </div>
           </div>
-          {session?.user?.role === UserRole.CANDIDATE && (
-            <ApplyButton jobId={job.id} hasApplied={!!hasApplied} />
-          )}
+          <ApplyButton jobId={job.id} hasApplied={false} />
         </div>
 
         <div className="mt-8">

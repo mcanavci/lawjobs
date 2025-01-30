@@ -48,12 +48,6 @@ export default function RootLayout({
                 >
                   İş İlanları
                 </Link>
-                <Link
-                  href="/auth/login"
-                  className="text-sm font-semibold leading-6 text-gray-900 hover:text-navy-600"
-                >
-                  Giriş Yap
-                </Link>
               </div>
               <div className="hidden lg:flex lg:flex-1 lg:justify-end">
                 <Link
@@ -95,13 +89,6 @@ export default function RootLayout({
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         İş İlanları
-                      </Link>
-                      <Link
-                        href="/auth/login"
-                        className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Giriş Yap
                       </Link>
                     </div>
                     <div className="py-6">

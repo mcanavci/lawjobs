@@ -46,27 +46,43 @@ interface JobData {
 export async function POST(request: Request) {
   try {
     const json = await request.json()
+    console.log('Received job data:', json)
+    
     const body = jobSchema.parse(json)
+    console.log('Validated job data:', body)
 
     // Ensure data directory exists
-    const dataDir = path.join(process.cwd(), 'src/data')
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true })
+    const dataDir = path.join(process.cwd(), 'public', 'data')
+    const jobsPath = path.join(dataDir, 'jobs.json')
+    
+    console.log('Data directory:', dataDir)
+    console.log('Jobs file path:', jobsPath)
+
+    try {
+      if (!fs.existsSync(dataDir)) {
+        console.log('Creating data directory...')
+        fs.mkdirSync(dataDir, { recursive: true })
+      }
+    } catch (e) {
+      console.error('Error creating directory:', e)
+      throw new Error('Failed to create data directory')
     }
 
     // Read existing jobs or create new file
-    const jobsPath = path.join(process.cwd(), 'src/data/jobs.json')
     let jobsData: JobData = { jobs: [] }
     
-    if (fs.existsSync(jobsPath)) {
-      const fileContent = fs.readFileSync(jobsPath, 'utf8')
-      try {
+    try {
+      if (fs.existsSync(jobsPath)) {
+        console.log('Reading existing jobs file...')
+        const fileContent = fs.readFileSync(jobsPath, 'utf8')
         jobsData = JSON.parse(fileContent) as JobData
-      } catch (e) {
-        console.error('Error parsing jobs.json:', e)
-        // If file is corrupted, start fresh
-        jobsData = { jobs: [] }
+      } else {
+        console.log('Creating new jobs file...')
+        fs.writeFileSync(jobsPath, JSON.stringify({ jobs: [] }, null, 2))
       }
+    } catch (e) {
+      console.error('Error reading/writing jobs file:', e)
+      throw new Error('Failed to access jobs data')
     }
 
     // Create new job
@@ -78,50 +94,85 @@ export async function POST(request: Request) {
       sourceUrl: '',
     }
 
+    console.log('Created new job:', newJob)
+
     // Add to beginning of jobs array
     jobsData.jobs.unshift(newJob)
 
-    // Save back to file
-    fs.writeFileSync(jobsPath, JSON.stringify(jobsData, null, 2))
+    try {
+      console.log('Saving updated jobs file...')
+      fs.writeFileSync(jobsPath, JSON.stringify(jobsData, null, 2))
+      console.log('Jobs file saved successfully')
+    } catch (e) {
+      console.error('Error saving jobs file:', e)
+      throw new Error('Failed to save job data')
+    }
 
     return NextResponse.json(newJob)
   } catch (error) {
+    console.error('Error in POST handler:', error)
+    
     if (error instanceof z.ZodError) {
-      return new NextResponse(JSON.stringify(error.errors), { status: 422 })
+      console.log('Validation error:', error.errors)
+      return new NextResponse(JSON.stringify(error.errors), { 
+        status: 422,
+        headers: { 'Content-Type': 'application/json' }
+      })
     }
 
-    console.error('Error creating job:', error)
     return new NextResponse(
-      JSON.stringify({ message: error instanceof Error ? error.message : 'Internal Error' }), 
-      { status: 500 }
+      JSON.stringify({ 
+        message: error instanceof Error ? error.message : 'Internal Error',
+        error: error instanceof Error ? error.stack : 'Unknown error'
+      }), 
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
     )
   }
 }
 
 export async function GET(request: Request) {
   try {
+    console.log('GET request received')
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type')
     const location = searchParams.get('location')
     const q = searchParams.get('q')?.toLowerCase()
 
+    console.log('Search params:', { type, location, q })
+
     // Read jobs from JSON file
-    const jobsPath = path.join(process.cwd(), 'src/data/jobs.json')
+    const jobsPath = path.join(process.cwd(), 'public', 'data', 'jobs.json')
+    console.log('Jobs file path:', jobsPath)
+    
     let jobs = []
     
-    if (fs.existsSync(jobsPath)) {
-      const jobsData = JSON.parse(fs.readFileSync(jobsPath, 'utf8'))
-      jobs = jobsData.jobs
+    try {
+      if (fs.existsSync(jobsPath)) {
+        console.log('Reading jobs file...')
+        const jobsData = JSON.parse(fs.readFileSync(jobsPath, 'utf8'))
+        jobs = jobsData.jobs
+        console.log(`Found ${jobs.length} jobs`)
+      } else {
+        console.log('Jobs file does not exist')
+      }
+    } catch (e) {
+      console.error('Error reading jobs file:', e)
+      throw new Error('Failed to read jobs data')
     }
 
     // Apply filters
     if (type) {
       jobs = jobs.filter((job: any) => job.type === type)
+      console.log(`After type filter: ${jobs.length} jobs`)
     }
     if (location) {
       jobs = jobs.filter((job: any) => 
         job.location.toLowerCase().includes(location.toLowerCase())
       )
+      console.log(`After location filter: ${jobs.length} jobs`)
     }
     if (q) {
       jobs = jobs.filter((job: any) => 
@@ -129,6 +180,7 @@ export async function GET(request: Request) {
         job.description.toLowerCase().includes(q) ||
         job.company.toLowerCase().includes(q)
       )
+      console.log(`After search filter: ${jobs.length} jobs`)
     }
 
     // Sort by creation date (newest first)
@@ -138,10 +190,16 @@ export async function GET(request: Request) {
 
     return NextResponse.json(jobs)
   } catch (error) {
-    console.error('Error reading jobs:', error)
+    console.error('Error in GET handler:', error)
     return new NextResponse(
-      JSON.stringify({ message: error instanceof Error ? error.message : 'Internal Error' }), 
-      { status: 500 }
+      JSON.stringify({ 
+        message: error instanceof Error ? error.message : 'Internal Error',
+        error: error instanceof Error ? error.stack : 'Unknown error'
+      }), 
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
     )
   }
 } 
